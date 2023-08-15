@@ -54,19 +54,21 @@ class ApiController extends AppController
     private function validarFormulario()
     {
 
-        $check_pagador = $this->request->getData('payer');
-        $check_recebedor = $this->request->getData('payee');
-        $check_valor = $this->request->getData('value');
+        $check_pagador = $this->request->getData('payer') ?? null;
+        $check_recebedor = $this->request->getData('payee') ?? null;
+        $check_valor = $this->request->getData('value') ?? null;
 
+        //VERIFICAR SE TODOS OS CAMPOS OBRIGATÓRIOS FORAM PREENCHIDOS
+        if (empty($check_pagador) || empty($check_recebedor) || empty($check_valor)) {
 
-        //Verificar se todos os campos obrigatórios do payload foram preenchidos
-        if (empty($check_pagador) || empty($$check_recebedor) || empty($check_valor)) {
-
+            die('errou');
             throw new Exception('Verifique se todos os campos obrigatórios do payload foram preenchidos');
         }
 
 
-        //Verificar se pagador e recebedor existem no database
+        //VERIFICAR SE PAGADO E RECEBEDOR EXISTEM NA BASE
         
+        
+        //VERIFICAR SE VALOR DE TRANSFERÊNCIA É POSITIVO
     }
 }
