@@ -75,7 +75,7 @@ class ApiController extends AppController
         try {
 
             /**
-             * OBSERVAÇÃO DE MELHORIA
+             * TODO - OBSERVAÇÃO DE MELHORIA
              * Em vez de notificar o usuário nesse momento, enviar uma mensagem para uma fila SQS
              * será mais rápido e se essa atividade não for algo fundamental, não irá travar a transação.
              */
@@ -184,7 +184,7 @@ class ApiController extends AppController
     {
 
         /**
-         * SUGESTÃO DE MELHORIA
+         * TODO - SUGESTÃO DE MELHORIA
          * Criar uma biblioteca de mensagens de erros e validação
          */
 

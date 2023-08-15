@@ -33,12 +33,14 @@ Você precisa rodar o seguinte comando para iniciar um servidor local através d
 bin/cake server -p 8765
 ```
 
-1. Esse é o endpoint da aplicação: 
+Esse é o endpoint da aplicação: 
+
 ```bash
-http://localhost:8765//api/transferencia
+http://localhost:8765/api/transferencia
 ```
 
 Esse endpoint espera receber os seguintes parametros por POST
+
 ```bash
 {
     "value" : 100.00,
