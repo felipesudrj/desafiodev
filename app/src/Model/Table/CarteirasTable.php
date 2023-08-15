@@ -65,4 +65,16 @@ class CarteirasTable extends Table
 
         return $objEncontrado->get('saldo');
     }
+
+    public function atualizarSaldo($usuario_id, $saldo)
+    {
+        $objEntity = $this->find()
+            ->where(['Carteiras.usuario_id' => $usuario_id])
+            ->first();
+
+        $objEntity->saldo = $saldo;
+        $objEntity->updated_at = date('Y-m-d H:i:s');
+
+        $this->save($objEntity);
+    }
 }

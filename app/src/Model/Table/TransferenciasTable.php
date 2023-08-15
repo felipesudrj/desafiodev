@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Table;
@@ -7,35 +8,11 @@ use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use Exception;
 
-/**
- * Transferencias Model
- *
- * @property \App\Model\Table\UsuariosTable&\Cake\ORM\Association\BelongsTo $Usuarios
- * @property \App\Model\Table\UsuariosTable&\Cake\ORM\Association\BelongsTo $Usuarios
- *
- * @method \App\Model\Entity\Transferencia newEmptyEntity()
- * @method \App\Model\Entity\Transferencia newEntity(array $data, array $options = [])
- * @method \App\Model\Entity\Transferencia[] newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Transferencia get($primaryKey, $options = [])
- * @method \App\Model\Entity\Transferencia findOrCreate($search, ?callable $callback = null, $options = [])
- * @method \App\Model\Entity\Transferencia patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \App\Model\Entity\Transferencia[] patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Transferencia|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\Transferencia saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\Transferencia[]|\Cake\Datasource\ResultSetInterface|false saveMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\Transferencia[]|\Cake\Datasource\ResultSetInterface saveManyOrFail(iterable $entities, $options = [])
- * @method \App\Model\Entity\Transferencia[]|\Cake\Datasource\ResultSetInterface|false deleteMany(iterable $entities, $options = [])
- * @method \App\Model\Entity\Transferencia[]|\Cake\Datasource\ResultSetInterface deleteManyOrFail(iterable $entities, $options = [])
- */
 class TransferenciasTable extends Table
 {
-    /**
-     * Initialize method
-     *
-     * @param array $config The configuration for the Table.
-     * @return void
-     */
+
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -52,12 +29,7 @@ class TransferenciasTable extends Table
         ]);
     }
 
-    /**
-     * Default validation rules.
-     *
-     * @param \Cake\Validation\Validator $validator Validator instance.
-     * @return \Cake\Validation\Validator
-     */
+
     public function validationDefault(Validator $validator): Validator
     {
         $validator
@@ -83,18 +55,33 @@ class TransferenciasTable extends Table
         return $validator;
     }
 
-    /**
-     * Returns a rules checker object that will be used for validating
-     * application integrity.
-     *
-     * @param \Cake\ORM\RulesChecker $rules The rules object to be modified.
-     * @return \Cake\ORM\RulesChecker
-     */
+
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn('pagador_id', 'Usuarios'), ['errorField' => 'pagador_id']);
-        $rules->add($rules->existsIn('recebedor_id', 'Usuarios'), ['errorField' => 'recebedor_id']);
+        $rules->add($rules->existsIn('pagador_id', 'Usuarios'), ['errorField' => 'pagador_id', 'message' => 'Verifique o código do pagador']);
+        $rules->add($rules->existsIn('recebedor_id', 'Usuarios'), ['errorField' => 'recebedor_id', 'message' => 'Verifique o código do recebedor']);
 
         return $rules;
+    }
+
+    public function registrarTransferencia($pagador_id, $recebedor_id, $valor_transferencia)
+    {
+        $arrData['pagador_id'] = $pagador_id;
+        $arrData['recebedor_id'] = $recebedor_id;
+        $arrData['valor'] = $valor_transferencia;
+        $arrData['notificado'] = 0;
+        $arrData['created_at'] = date('Y-m-d H:i:s');
+
+        $objEntity = $this->newEmptyEntity();
+        $objEntity = $this->patchEntity($objEntity, $arrData);
+
+
+        if ($objEntity->hasErrors()) {
+            throw new Exception('Erro ao registrar a transferência.');
+        }
+
+        $this->save($objEntity);
+
+        return $objEntity->id;
     }
 }

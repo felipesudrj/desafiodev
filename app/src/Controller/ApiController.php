@@ -58,6 +58,7 @@ class ApiController extends AppController
 
 
             $info['msg'] = 'Transfêrencia realizada';
+
             $connection->commit();
         } catch (\Exception $e) {
 
@@ -102,14 +103,27 @@ class ApiController extends AppController
     {
 
 
-        $check_pagador = $this->request->getData('payer') ?? null;
-        $check_recebedor = $this->request->getData('payee') ?? null;
-        $check_valor = $this->request->getData('value') ?? null;
+        $pagador_id = $this->request->getData('payer') ?? null;
+        $recebedor_id = $this->request->getData('payee') ?? null;
+        $valor_transferencia = $this->request->getData('value') ?? null;
 
-        //TODO - REGISTRAR TRANSFERENCIA NA CARTEIRA DO RECEBEDOR
-        //TODO - ATUALIZAR SALDO DO RECEBEDOR
-        //TODO - ATUALIZAR SALDO DO PAGADOR
+        //REGISTRAR TRANSFERENCIA NA CARTEIRA DO RECEBEDOR
+        $tabTransferencias = TableRegistry::getTableLocator()->get('Transferencias');
+        $tabTransferencias->registrarTransferencia($pagador_id, $recebedor_id, $valor_transferencia);
 
+
+        //ATUALIZAR SALDO DO PAGADOR
+        $tabCarteira = TableRegistry::getTableLocator()->get('Carteiras');
+
+        $saldo_pagador = $this->getSaldo($pagador_id);
+        $saldo_atual = $saldo_pagador - $valor_transferencia;
+        $tabCarteira->atualizarSaldo($pagador_id, $saldo_atual);
+
+
+        //ATUALIZAR SALDO DO PAGADOR
+        $saldo_recebedor = $this->getSaldo($recebedor_id);
+        $saldo_atual = $saldo_recebedor + $valor_transferencia;
+        $tabCarteira->atualizarSaldo($recebedor_id, $saldo_atual);
     }
 
 
@@ -132,16 +146,19 @@ class ApiController extends AppController
         return true;
     }
 
+    private function getSaldo($usuario_id)
+    {
+        $tabCarteira = TableRegistry::getTableLocator()->get('Carteiras');
+        $saldo = $tabCarteira->getSaldo($usuario_id);
+        return $saldo;
+    }
 
     private function verificarSaldo()
     {
 
         $pagador_id = $this->request->getData('payer') ?? null;
         $valor_transferencia = $this->request->getData('value') ?? null;
-
-
-        $tabCarteira = TableRegistry::getTableLocator()->get('Carteiras');
-        $saldo = $tabCarteira->getSaldo($pagador_id);
+        $saldo = $this->getSaldo($pagador_id);
 
         if ($saldo < $valor_transferencia) {
             throw new Exception('Você não tem saldo suficiente para essa transferência');
@@ -166,14 +183,22 @@ class ApiController extends AppController
     private function validarFormulario()
     {
 
+        /**
+         * SUGESTÃO DE MELHORIA
+         * Criar uma biblioteca de mensagens de erros e validação
+         */
+
         $check_pagador = $this->request->getData('payer') ?? null;
         $check_recebedor = $this->request->getData('payee') ?? null;
         $check_valor = $this->request->getData('value') ?? null;
 
         //VERIFICAR SE TODOS OS CAMPOS OBRIGATÓRIOS FORAM PREENCHIDOS
         if (empty($check_pagador) || empty($check_recebedor) || empty($check_valor)) {
-
             throw new Exception('Verifique se todos os campos obrigatórios do payload foram preenchidos - Erro 5501');
+        }
+
+        if (!is_int($check_pagador) || !is_int($check_recebedor)) {
+            throw new Exception('Verifique o tipo enviado no campo payer ou payee - Erro 5501');
         }
 
 
