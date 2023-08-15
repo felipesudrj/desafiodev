@@ -10,6 +10,8 @@ namespace App\Controller;
 
 use App\Model\Table\UsuariosTable;
 use Cake\Core\Configure;
+use Cake\Datasource\ConnectionManager;
+use Cake\Http\Client;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
@@ -33,26 +35,73 @@ class ApiController extends AppController
 
         try {
 
+            $connection = ConnectionManager::get('default');
+            $connection->begin();
 
             //VALIDAR FORMULÁRIO E USUÁRIO
             $this->validarFormulario();
+
             //VALIDAR SE TEM PERMISSÃO (PERFIL USUARIO)
             $this->validarPermissao();
-            //VERIFICAR SALDO
-            $saldo = $this->verificarSaldo();
-            //VERIFICAR SE TEM ESTA AUTORIZADO A TRANSFERIR (EXTERNO)            
-            //NOTIFICAR O RECEBEDOR
-            //ATUALIZAR SALDO DO RECEBEDOR E DO PAGADOR
 
+            //VERIFICAR SALDO
+            $this->verificarSaldo();
+
+            //VERIFICAR SE TEM ESTA AUTORIZADO A TRANSFERIR (EXTERNO)         
+            $this->verificarAutorizacaoExterna();
+
+            //TRANSFERENCIA DE CARTEIRA
+            $this->processarTransferencia();
+
+            //NOTIFICAR O RECEBEDOR
 
             $info['msg'] = 'Transfêrencia realizada';
+            $connection->commit();
+
         } catch (\Exception $e) {
+
+            $connection->rollback();
 
             return $this->responseJsonError($e->getMessage());
         }
 
         return $this->responseJson($info);
     }
+
+
+    private function processarTransferencia(){
+
+        
+        $check_pagador = $this->request->getData('payer') ?? null;
+        $check_recebedor = $this->request->getData('payee') ?? null;
+        $check_valor = $this->request->getData('value') ?? null;
+
+        //REGISTRAR TRANSFERENCIA NA CARTEIRA DO RECEBEDOR
+        //ATUALIZAR SALDO DO RECEBEDOR
+        //ATUALIZAR SALDO DO PAGADOR
+
+    }
+
+
+    private function verificarAutorizacaoExterna()
+    {
+
+        $url = 'https://run.mocky.io/v3/8fafdd68-a090-496f-8c9a-3442cf30dae6';
+
+        $client = new Client();
+        $response = $client->get($url);
+        if (!$response->isOk()) {
+            throw new Exception('Serviço indisponível, tente novamente mais tarde - Erro 57001');
+        }
+
+        $body = json_decode($response->getStringBody(), true);
+        if ($body['message'] != 'Autorizado') {
+            throw new Exception('Serviço indisponível, tente novamente mais tarde - Erro 57002');
+        };
+
+        return true;
+    }
+
 
     private function verificarSaldo()
     {
