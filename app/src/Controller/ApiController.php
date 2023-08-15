@@ -54,10 +54,11 @@ class ApiController extends AppController
             $this->processarTransferencia();
 
             //NOTIFICAR O RECEBEDOR
+            $this->notificacao();
+
 
             $info['msg'] = 'Transfêrencia realizada';
             $connection->commit();
-
         } catch (\Exception $e) {
 
             $connection->rollback();
@@ -68,17 +69,46 @@ class ApiController extends AppController
         return $this->responseJson($info);
     }
 
+    private function notificacao()
+    {
+        try {
 
-    private function processarTransferencia(){
+            /**
+             * OBSERVAÇÃO DE MELHORIA
+             * Em vez de notificar o usuário nesse momento, enviar uma mensagem para uma fila SQS
+             * será mais rápido e se essa atividade não for algo fundamental, não irá travar a transação.
+             */
 
-        
+            $valor = $this->request->getData('value') ?? null;
+            $data['msg'] = 'Você recebeu uma transferência no valor de ' . $valor;
+            $url = 'https://run.mocky.io/v3/8fafdd68-a090-496f-8c9a-3442cf30dae6';
+            $client = new Client();
+            $response = $client->post($url, $data);
+
+            if (!$response->isOk()) {
+                throw new Exception('Serviço indisponível, tente novamente mais tarde - Erro 58001');
+            }
+
+
+            //TODO - ATUALIZAR STATUS DE NOTIFICAÇÃO DA TRANSFERENCIA
+
+        } catch (Exception $e) {
+
+            throw $e;
+        }
+    }
+
+    private function processarTransferencia()
+    {
+
+
         $check_pagador = $this->request->getData('payer') ?? null;
         $check_recebedor = $this->request->getData('payee') ?? null;
         $check_valor = $this->request->getData('value') ?? null;
 
-        //REGISTRAR TRANSFERENCIA NA CARTEIRA DO RECEBEDOR
-        //ATUALIZAR SALDO DO RECEBEDOR
-        //ATUALIZAR SALDO DO PAGADOR
+        //TODO - REGISTRAR TRANSFERENCIA NA CARTEIRA DO RECEBEDOR
+        //TODO - ATUALIZAR SALDO DO RECEBEDOR
+        //TODO - ATUALIZAR SALDO DO PAGADOR
 
     }
 
