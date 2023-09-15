@@ -25,6 +25,10 @@ No recebimento de pagamento, o usuário ou lojista precisa receber notificação
 Este serviço deve ser RESTFul.
 
 
+## solução realizada ----- segue instruções ---- ####
+
+
+
 ## Ambiente
 1. Faça o download do projeto (https://github.com/felipesudrj/desafiodev)
 
